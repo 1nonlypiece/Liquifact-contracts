@@ -1,5 +1,7 @@
 use super::*;
 use proptest::prelude::*;
+extern crate std;
+use std::format;
 
 // Initialization, getters, invoice-id validation, and init-shaped cost baselines.
 
