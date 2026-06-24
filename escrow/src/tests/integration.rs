@@ -98,7 +98,8 @@ fn test_legal_hold_midflow_blocks_and_resumes_with_ordered_events() {
     let event_count = env.events().all().events().len();
     assert!(
         event_count >= 6,
-        "expected at least 6 LegalHoldChanged events, got {event_count}"
+        "expected at least 6 LegalHoldChanged events, got {event_count}, all events: {:?}",
+        env.events().all().events()
     );
 }
 
