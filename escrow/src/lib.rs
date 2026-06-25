@@ -1317,6 +1317,9 @@ impl LiquifactEscrow {
         sweep_amt
     }
 
+    /// Returns the full escrow snapshot ([`InvoiceEscrow`]) from [`DataKey::Escrow`].
+    ///
+    /// Emits [`EscrowError::EscrowNotInitialized`] (code 20) if called before [`LiquifactEscrow::init`].
     pub fn get_escrow(env: Env) -> InvoiceEscrow {
         env.storage()
             .instance()
@@ -1720,6 +1723,9 @@ impl LiquifactEscrow {
         .publish(&env);
     }
 
+    /// Returns `true` when the append-log entry at `index` has been revoked via
+    /// [`LiquifactEscrow::revoke_attestation_digest`].
+    /// Defaults to `false` when the key is absent (not revoked).
     pub fn is_attestation_revoked(env: Env, index: u32) -> bool {
         env.storage()
             .instance()
@@ -1727,6 +1733,8 @@ impl LiquifactEscrow {
             .unwrap_or(false)
     }
 
+    /// Returns `true` when the investor has exercised [`LiquifactEscrow::claim_investor_payout`].
+    /// Stored in persistent storage. Defaults to `false` when absent.
     pub fn is_investor_claimed(env: Env, investor: Address) -> bool {
         Self::get_persistent_investor_claimed(&env, investor)
     }
@@ -1897,6 +1905,9 @@ impl LiquifactEscrow {
         .publish(&env);
     }
 
+    /// Returns `true` when the investor allowlist gate is enabled.
+    /// When active, only addresses with [`is_investor_allowlisted`] set to true may fund the escrow.
+    /// Defaults to `false` when the key is absent.
     pub fn is_allowlist_active(env: Env) -> bool {
         env.storage()
             .instance()
@@ -1960,6 +1971,9 @@ impl LiquifactEscrow {
         }
     }
 
+    /// Returns `true` when `investor` is permitted to fund when the allowlist gate is active.
+    /// Stored in persistent storage (independent TTL per address).
+    /// Defaults to `false` when the key is absent.
     pub fn is_investor_allowlisted(env: Env, investor: Address) -> bool {
         env.storage()
             .persistent()
