@@ -193,7 +193,23 @@ Returns the proposed successor admin waiting for `accept_admin`, or `None` when 
 
 ---
 
-### `get_legal_hold() → bool`
+## `get_remaining_funding_capacity() → i128`
+
+**Storage key:** `DataKey::Escrow`
+
+Returns the remaining funding capacity before the funding target is reached.
+
+- **Calculation**: `funding_target.saturating_sub(funded_amount)` clamped at `0` (via `.max(0)`) so it never goes negative when over-funded.
+- **Informational only**: This view is for frontend guidance. The `fund` method may still accept deposits that over-fund past the target while the escrow status is `0` (Open).
+- **No authorization**: Pure read; no auth or signature required.
+- **Complexity**:
+  - Time Complexity: $O(1)$ read from storage.
+  - Space Complexity: $O(1)$ in-memory calculation.
+- Panics with `"Escrow not initialized"` before `init`.
+
+---
+
+## `get_version() → u32`
 
 **Storage key:** `DataKey::LegalHold`  
 **Signature:** `pub fn get_legal_hold(env: Env) -> bool`
