@@ -309,11 +309,10 @@ pub enum EscrowError {
     PrimaryAttestationAlreadyBound = 50,
     /// [`LiquifactEscrow::append_attestation_digest`] exceeded [`MAX_ATTESTATION_APPEND_ENTRIES`].
     AttestationAppendLogCapacityReached = 51,
-    /// [`LiquifactEscrow::revoke_attestation_digest`] / [`LiquifactEscrow::unrevoke_attestation_digest`]
-    /// received an `index` that is out of bounds for the current append log.
+    /// [`LiquifactEscrow::revoke_attestation_digest`] received an `index >= log.len()`.
     AttestationIndexOutOfRange = 52,
-    /// [`LiquifactEscrow::unrevoke_attestation_digest`] called on an index that is not currently revoked.
-    AttestationNotRevoked = 53,
+    /// [`LiquifactEscrow::revoke_attestation_digest`] called on an already-revoked index.
+    AttestationAlreadyRevoked = 53,
 
     /// [`LiquifactEscrow::record_sme_collateral_commitment`] received a non-positive amount.
     CollateralAmountNotPositive = 60,
@@ -440,13 +439,6 @@ pub enum EscrowError {
     NoPendingAdmin = 81,
     /// The contract's funding-token balance is less than `funded_amount` at withdraw time.
     /// Funds must be custodied in this contract before the SME can pull them.
-    ///
-    /// # Renumber note
-    /// Originally assigned `= 164`, but `FundingDeadlinePassed = 164` had
-    /// already taken that discriminant, which made the whole crate fail
-    /// to compile (`E0081` duplicate discriminant). This variant is now
-    /// `= 165`. Off-chain clients that branch on the numeric code must
-    /// migrate their `switch`/match arms when integrating this fix.
     InsufficientContractBalance = 165,
 }
 
@@ -2247,12 +2239,17 @@ impl LiquifactEscrow {
             .instance()
             .get(&DataKey::AttestationAppendLog)
             .unwrap_or_else(|| Vec::new(&env));
-        assert!(index < log.len(), "attestation index out of range");
-        assert!(
+        ensure(
+            &env,
+            index < log.len(),
+            EscrowError::AttestationIndexOutOfRange,
+        );
+        ensure(
+            &env,
             !env.storage()
                 .instance()
                 .has(&DataKey::AttestationRevoked(index)),
-            "attestation already revoked at index"
+            EscrowError::AttestationAlreadyRevoked,
         );
 
         env.storage()
