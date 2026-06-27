@@ -1,7 +1,7 @@
 // Tests for the status guard functionality
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, String};
 use crate::EscrowError;
+use soroban_sdk::{testutils::Address as _, Address, Env, String};
 
 fn setup_env_and_client() -> (Env, LiquifactEscrowClient<'static>, Address, Address) {
     let env = Env::default();
@@ -11,7 +11,7 @@ fn setup_env_and_client() -> (Env, LiquifactEscrowClient<'static>, Address, Addr
     let sme = Address::generate(&env);
     let tok = Address::generate(&env);
     let tre = Address::generate(&env);
-    
+
     // Use the 14-argument init signature
     client.init(
         &admin,

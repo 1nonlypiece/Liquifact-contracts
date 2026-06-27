@@ -56,11 +56,11 @@ mod external_calls_mocked;
 mod funding;
 mod init;
 mod integration;
+mod integration_status_guards;
 mod legal_hold;
 mod migration_errors;
 mod properties;
 mod settlement;
-mod integration_status_guards;
 
 /// Registers a new escrow contract instance and returns its contract id.
 pub fn deploy_id(env: &Env) -> Address {

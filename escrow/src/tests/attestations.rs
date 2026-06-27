@@ -245,7 +245,6 @@ fn test_primary_and_append_coexist() {
     assert_eq!(client.get_attestation_append_log().len(), 4);
 }
 
-
 /// Revocation does not alter the append log contents — the digest remains readable.
 #[test]
 fn test_revoke_preserves_log_entry() {

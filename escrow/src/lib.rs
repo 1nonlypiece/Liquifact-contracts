@@ -1162,7 +1162,7 @@ impl LiquifactEscrow {
             .get(&DataKey::Treasury)
             .unwrap_or_else(|| fail(env, EscrowError::TreasuryNotSet))
     }
-/// Validates the optional yield-tier table supplied at `init`.
+    /// Validates the optional yield-tier table supplied at `init`.
     ///
     /// # Rules
     ///
@@ -1227,7 +1227,7 @@ impl LiquifactEscrow {
         }
     }
 
-   /// Returns `(effective_yield_bps, matched_lock_secs)` for a given commitment.
+    /// Returns `(effective_yield_bps, matched_lock_secs)` for a given commitment.
     ///
     /// Scans [`DataKey::YieldTierTable`] and picks the tier with the highest `yield_bps`
     /// where `committed_lock_secs >= tier.min_lock_secs`. Returns base yield when:
@@ -1241,8 +1241,6 @@ impl LiquifactEscrow {
     ///
     /// `matched_lock_secs` is the `min_lock_secs` of the matched tier, or `0` for base yield.
     fn effective_yield_for_commitment(
-    
-    
         env: &Env,
         base_yield: i64,
         committed_lock_secs: u64,
@@ -1842,8 +1840,6 @@ impl LiquifactEscrow {
             .unwrap_or(0)
     }
 
-
-
     /// Bundles multiple read-only values to return a comprehensive summary of the escrow state
     /// in a single host invocation.
     pub fn get_escrow_summary(env: Env) -> EscrowSummary {
@@ -2195,7 +2191,11 @@ impl LiquifactEscrow {
             .instance()
             .get(&DataKey::AttestationAppendLog)
             .unwrap_or_else(|| Vec::new(&env));
-        ensure(&env, index < log.len(), EscrowError::AttestationIndexOutOfRange);
+        ensure(
+            &env,
+            index < log.len(),
+            EscrowError::AttestationIndexOutOfRange,
+        );
         ensure(
             &env,
             !env.storage()
@@ -2750,9 +2750,7 @@ impl LiquifactEscrow {
 
         ensure(
             &env,
-            env.storage()
-                .instance()
-                .has(&DataKey::LegalHoldClearableAt),
+            env.storage().instance().has(&DataKey::LegalHoldClearableAt),
             EscrowError::LegalHoldClearRequestMissing,
         );
         let clearable_at: u64 = env
@@ -2795,9 +2793,7 @@ impl LiquifactEscrow {
 
         ensure(
             &env,
-            !env.storage()
-                .instance()
-                .has(&DataKey::LegalHoldClearableAt),
+            !env.storage().instance().has(&DataKey::LegalHoldClearableAt),
             EscrowError::LegalHoldClearRequestMissing,
         );
 
@@ -2827,9 +2823,7 @@ impl LiquifactEscrow {
 
         ensure(
             &env,
-            env.storage()
-                .instance()
-                .has(&DataKey::LegalHoldClearableAt),
+            env.storage().instance().has(&DataKey::LegalHoldClearableAt),
             EscrowError::LegalHoldClearRequestMissing,
         );
 
@@ -3262,12 +3256,7 @@ impl LiquifactEscrow {
             !Self::legal_hold_active(&env),
             EscrowError::LegalHoldBlocksFunding,
         );
-        guard_status_eq(
-            &env,
-            escrow.status,
-            0,
-            EscrowError::EscrowNotOpenForFunding,
-        );
+        guard_status_eq(&env, escrow.status, 0, EscrowError::EscrowNotOpenForFunding);
 
         // Check funding deadline
         if let Some(deadline) = env.storage().instance().get(&DataKey::FundingDeadline) {
@@ -3638,7 +3627,7 @@ impl LiquifactEscrow {
     /// 6. Idempotent early-return on `InvestorClaimed`.
     /// 7. Storage write + event emit.
     ///
-   /// # Claim-lock enforcement
+    /// # Claim-lock enforcement
     /// `InvestorClaimNotBefore = deposit_timestamp + committed_lock_secs`.
     /// Enforces `now >= not_before` (inclusive boundary):
     /// - deposit at t=1000, lock=500 -> not_before=1500
@@ -3664,12 +3653,7 @@ impl LiquifactEscrow {
 
         // env.clone(): env is used again after this call for storage reads, ledger timestamp, and publish.
         let escrow = Self::get_escrow(env.clone());
-        guard_status_eq(
-            &env,
-            escrow.status,
-            2,
-            EscrowError::InvestorClaimNotSettled,
-        );
+        guard_status_eq(&env, escrow.status, 2, EscrowError::InvestorClaimNotSettled);
 
         let not_before: u64 =
             Self::get_persistent_investor_claim_not_before(&env, investor.clone());

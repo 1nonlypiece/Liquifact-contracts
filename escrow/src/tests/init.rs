@@ -1,5 +1,5 @@
-use crate::{EscrowError, EscrowInitialized};
 use super::*;
+use crate::{EscrowError, EscrowInitialized};
 use crate::{EscrowInitialized, DEFAULT_MATURITY_MAX_HORIZON_SECS};
 use proptest::prelude::*;
 extern crate std;
