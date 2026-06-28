@@ -822,6 +822,16 @@ pub struct MaturityUpdatedEvent {
 }
 
 #[contractevent]
+pub struct BeneficiaryRotated {
+    #[topic]
+    pub name: Symbol,
+    #[topic]
+    pub invoice_id: Symbol,
+    pub old_sme: Address,
+    pub new_sme: Address,
+}
+
+#[contractevent]
 pub struct AdminTransferredEvent {
     #[topic]
     pub name: Symbol,
@@ -3333,11 +3343,13 @@ impl LiquifactEscrow {
                     escrow.yield_bps,
                 );
                 Self::set_persistent_investor_claim_not_before(&env, investor.clone(), 0u64);
+                tier_lock_secs = 0;
             } else {
                 // Returning investor: yield was set on first deposit; read it for the event.
                 investor_effective_yield_bps =
                     Self::get_persistent_investor_effective_yield(&env, investor.clone())
                         .unwrap_or(escrow.yield_bps);
+                tier_lock_secs = 0;
             }
             // If prev > 0, preserve existing effective yield and claim lock
         } else {
@@ -3924,6 +3936,42 @@ impl LiquifactEscrow {
                 PERSISTENT_TTL_MIN_EXTENSION_LEDGERS,
             );
         }
+    }
+
+    /// Update the SME beneficiary address via dual consent (current SME and admin).
+    ///
+    /// Allowed only in non-terminal states (0 = open, 1 = funded).
+    /// Invariant: after rotation, only the new SME may withdraw/settle.
+    pub fn rotate_beneficiary(env: Env, new_sme: Address) {
+        let mut escrow = Self::get_escrow(env.clone());
+
+        ensure(
+            &env,
+            escrow.status == 0 || escrow.status == 1,
+            EscrowError::RotateBeneficiaryNotOpen,
+        );
+
+        escrow.sme_address.require_auth();
+        escrow.admin.require_auth();
+
+        ensure(
+            &env,
+            escrow.sme_address != new_sme,
+            EscrowError::NewSmeSameAsCurrent,
+        );
+
+        let old_sme = escrow.sme_address.clone();
+        escrow.sme_address = new_sme.clone();
+
+        env.storage().instance().set(&DataKey::Escrow, &escrow);
+
+        BeneficiaryRotated {
+            name: Symbol::new(&env, "BeneficiaryRotated"),
+            invoice_id: escrow.invoice_id.clone(),
+            old_sme,
+            new_sme,
+        }
+        .publish(&env);
     }
 
     /// Propose a new admin (`PendingAdmin`) — step 1 of a two-step handover.
